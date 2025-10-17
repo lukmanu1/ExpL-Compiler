@@ -2,7 +2,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
-    #include "./labelTransition/label.h"
+    #include "label.h"
 
     int instructCount = 0;
     int pass = 1;
@@ -13,7 +13,7 @@
 
 number      [0-9]+
 register    R[0-9]+
-label       [A-Za-z][A-Za-z0-9_]*
+label       [A-Za-z][.A-Za-z0-9_]*
 space       [ \t]+
 
 jz_instr    JZ{space}{register},{space}?{label}

@@ -9,6 +9,8 @@
 
 "begin"     { return PBEGIN; }
 "end"       { return END; }
+"main"      { return MAIN; }
+"return"    {return RETURN; }
 
 "write"     { return WRITE; }
 "read"      { return READ; }

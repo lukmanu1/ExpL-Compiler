@@ -1,4 +1,41 @@
 decl
-    int b[10], a, fn(int c, int b);
-    str c, rev(int c, int b, str a);
+ int add(int x, int y),a, swap(str *a, str *b);
 enddecl
+
+int swap(str *a, str *b){
+  decl
+  str temp;
+  enddecl
+  begin
+   temp = *a;
+   *a = *b;
+   *b = temp;
+   return 1;
+  end;
+}
+
+int add(int x, int y){
+  decl
+  enddecl
+  begin
+    return x + y;
+  end;
+}
+
+int main()
+{
+ decl
+  str a, b;
+  int x;
+ enddecl
+
+ begin
+  read(a);
+  read(b);
+  x = swap(&a, &b);
+  write(a);
+  write(b);
+
+  return 0;
+ end;
+}

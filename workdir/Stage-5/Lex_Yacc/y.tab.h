@@ -76,9 +76,11 @@ extern int yydebug;
     ENDDECL = 282,
     INT = 283,
     STR = 284,
-    NUM = 285,
-    ID = 286,
-    STRING_LITERAL = 287
+    MAIN = 285,
+    RETURN = 286,
+    NUM = 287,
+    ID = 288,
+    STRING_LITERAL = 289
   };
 #endif
 /* Tokens.  */
@@ -109,21 +111,24 @@ extern int yydebug;
 #define ENDDECL 282
 #define INT 283
 #define STR 284
-#define NUM 285
-#define ID 286
-#define STRING_LITERAL 287
+#define MAIN 285
+#define RETURN 286
+#define NUM 287
+#define ID 288
+#define STRING_LITERAL 289
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 20 "parser.y"
+#line 25 "parser.y"
 
     ast_node* AST_node;
     gst_node* GST_node;
+    lst_node* LST_node;
     p_node* param_node;
 
-#line 127 "y.tab.h"
+#line 132 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

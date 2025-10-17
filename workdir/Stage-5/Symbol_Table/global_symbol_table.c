@@ -1,4 +1,5 @@
 #include "./global_symbol_table.h"
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -12,7 +13,7 @@ gst_node* tail = NULL;
 p_node* param_head = NULL;
 p_node* param_tail = NULL;
 
-gst_node* create_gst_node(char* name, int type, int outer_size, int inner_size, p_node* param_list, gst_node* next){
+gst_node* create_gst_node(char* name, table_type* type, int outer_size, int inner_size, p_node* param_list, gst_node* next){
 
     gst_node* new_node = (gst_node*)malloc(sizeof(gst_node));
 
@@ -41,16 +42,7 @@ gst_node* create_gst_node(char* name, int type, int outer_size, int inner_size, 
     return new_node;
 }
 
-p_node* create_p_node(char* name, int type){
-
-    p_node* new_node = (p_node*)malloc(sizeof(p_node));
-    new_node->name = strdup(name);
-    new_node->next = NULL;
-
-    return new_node;
-}
-
-void gst_install(char *name, int type, int outer_size, int inner_size, p_node* param_list){
+void gst_install(char *name, table_type* type, int outer_size, int inner_size, p_node* param_list){
    gst_node* temp = look_up(name);
     if (temp) {
         fprintf(stderr, "Error: variable '%s' is already declared.\n", name);
@@ -67,7 +59,30 @@ void gst_install(char *name, int type, int outer_size, int inner_size, p_node* p
     }
 }
 
-void param_install(char* name, int type){
+gst_node* look_up(char* name){
+
+    gst_node* temp = head;
+
+    while(temp){
+        if(strcmp(temp->name, name) == 0)return temp;
+        temp = temp->next;
+    }
+
+    return NULL;
+}
+
+
+p_node* create_p_node(char* name, table_type* type){
+
+    p_node* new_node = (p_node*)malloc(sizeof(p_node));
+    new_node->name = strdup(name);
+    new_node->next = NULL;
+    new_node->type = type;
+
+    return new_node;
+}
+
+void param_install(char* name, table_type* type){
 
     if(param_head == NULL){
 
@@ -87,18 +102,6 @@ void param_install(char* name, int type){
 
     }
 
-}
-
-gst_node* look_up(char* name){
-
-    gst_node* temp = head;
-
-    while(temp){
-        if(strcmp(temp->name, name) == 0)return temp;
-        temp = temp->next;
-    }
-
-    return NULL;
 }
 
 p_node* param_look_up(char* name){
@@ -148,7 +151,7 @@ void print_gstable() {
 
     while (temp) {
         printf("ID Name     : %-15s\n", temp->name);
-        printf("Type        : %-10d\n", temp->type);
+        printf("Type        : %-15s\n", temp->type->name);
         printf("Outer Size  : %-10d\n", temp->out_size);
         printf("Inner Size  : %-10d\n", temp->inner_size);
         printf("Binding     : %-10d\n", temp->binding);
@@ -157,7 +160,7 @@ void print_gstable() {
             printf("Parameters  :\n");
             p_node* temp_list = temp->param_list;
             while (temp_list) {
-                printf("   ➜ %-12s | Type : %-3d\n", temp_list->name, temp_list->type);
+                printf("   ➜ %-12s | Type : %-10s\n", temp_list->name, temp_list->type->name);
                 temp_list = temp_list->next;
             }
         } else {

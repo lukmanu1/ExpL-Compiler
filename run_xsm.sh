@@ -3,7 +3,7 @@
 # Usage: ./run_xsm.sh file_name [input.txt output.txt]
 
 EXEC="./xsm"
-DIR="./workdir/Stage-4/lexAndYacc"
+DIR="./workdir/Stage-5/Lex_Yacc"
 FILE_NAME=$1
 
 if [[ -z "$FILE_NAME" ]]; then
