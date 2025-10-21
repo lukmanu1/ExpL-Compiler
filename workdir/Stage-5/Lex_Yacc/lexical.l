@@ -10,7 +10,10 @@
 "begin"     { return PBEGIN; }
 "end"       { return END; }
 "main"      { return MAIN; }
-"return"    {return RETURN; }
+"return"    { return RETURN; }
+"type"      { return TYPE; }
+"endtype"   { return ENDTYPE; }
+"tuple"     { return TUPLE; }
 
 "write"     { return WRITE; }
 "read"      { return READ; }
@@ -48,7 +51,7 @@
 "!="        { return NE; }
 "&"         { return AND; }
 
-[(){},;\[\]] { return *yytext; }
+[(){},.;\[\]]    { return *yytext; }
 
 [a-zA-Z][A-Za-z0-9]* {
     // Identifier node
@@ -82,7 +85,7 @@
 [ \t\r]+    { /* ignore whitespace */ }
 \n          { /* ignore newlines */ }
 
-.           { /* ignore any other character */ }
+.           { fprintf(stderr, "Unexpected character: %c\n", *yytext); }
 
 %%
 

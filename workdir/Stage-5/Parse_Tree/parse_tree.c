@@ -176,6 +176,62 @@ ast_node* create_id_node(ast_node* id){
 
 }
 
+field* find_field(field* field_list, char* field_name){
+    field* temp = field_list;
+
+    while (temp)
+    {
+        if(strcmp(temp->name, field_name) == 0)return temp;
+        temp = temp->next;
+    }
+
+    return NULL;
+    
+}
+
+ast_node* create_tuple_node(ast_node* tuple, ast_node* field_node) {
+
+    lst_node* local_temp = lst_look_up(tuple->name);
+    gst_node* global_temp = NULL;
+    field* field_type = NULL;
+
+    if (local_temp != NULL) {
+        tuple->Lentry = local_temp;
+
+        if (tuple->Lentry->type == NULL || tuple->Lentry->type->fields == NULL) {
+            yyerror("Tuple variable has no field definitions.\n");
+        }
+
+        field_type = find_field(tuple->Lentry->type->fields, field_node->name);
+    } else {
+        printf("Variable '%s' is not declared in the local symbol table.\n", tuple->name);
+
+        global_temp = look_up(tuple->name);
+        if (global_temp == NULL) {
+            yyerror("Identifier not declared in either local or global symbol table.\n");
+        }
+
+        tuple->Gentry = global_temp;
+
+        if (tuple->Gentry->type == NULL || tuple->Gentry->type->fields == NULL) {
+            yyerror("Tuple variable has no field definitions.\n");
+        }
+
+        field_type = find_field(tuple->Gentry->type->fields, field_node->name);
+    }
+
+    if (field_type == NULL) {
+        yyerror("Undeclared field in tuple type.\n");
+    }
+
+    tuple->type = field_type->type;
+    tuple->nodetype = NODE_TYPE_TUPLE;
+    tuple->ptr1 = field_node;
+    field_node->type = field_type->type;
+
+    return tuple;
+}
+
 ast_node* create_ref_node(ast_node* id){
     lst_node* local_temp = lst_look_up(id->name);
     gst_node* global_temp = NULL;
@@ -444,3 +500,4 @@ ast_node* create_array_node(ast_node* array, ast_node* index){
     
     return expr_node;
 }
+

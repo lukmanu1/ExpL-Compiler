@@ -36,6 +36,7 @@ void print_gstable();
 p_node* create_p_node(char* name, table_type* type);
 void param_install(char* name, table_type* type);
 p_node* param_look_up(char* name);
+p_node* append_param(p_node* head, p_node* new_node);
 
 void print_gstable();
 

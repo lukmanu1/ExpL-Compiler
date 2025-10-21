@@ -54,4 +54,8 @@ int code_gen_array(FILE* fptr, ast_node* node);
 // ---------- Master Dispatcher ----------
 int codeGen(FILE *fptr, ast_node *node);
 
+int find_field_index(field* field_list, char* field_name);
+int code_gen_tuple(FILE* fptr, ast_node* node);
+int code_gen_tuple_copy(FILE* fptr, ast_node* node);
+
 #endif // CODE_GENERATION_H

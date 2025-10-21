@@ -78,9 +78,12 @@ extern int yydebug;
     STR = 284,
     MAIN = 285,
     RETURN = 286,
-    NUM = 287,
-    ID = 288,
-    STRING_LITERAL = 289
+    TUPLE = 287,
+    TYPE = 288,
+    ENDTYPE = 289,
+    NUM = 290,
+    ID = 291,
+    STRING_LITERAL = 292
   };
 #endif
 /* Tokens.  */
@@ -113,9 +116,12 @@ extern int yydebug;
 #define STR 284
 #define MAIN 285
 #define RETURN 286
-#define NUM 287
-#define ID 288
-#define STRING_LITERAL 289
+#define TUPLE 287
+#define TYPE 288
+#define ENDTYPE 289
+#define NUM 290
+#define ID 291
+#define STRING_LITERAL 292
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -127,8 +133,9 @@ union YYSTYPE
     gst_node* GST_node;
     lst_node* LST_node;
     p_node* param_node;
+    field* field_node;
 
-#line 132 "y.tab.h"
+#line 139 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

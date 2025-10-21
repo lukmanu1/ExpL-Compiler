@@ -10,6 +10,16 @@ decl
   int funct(int a, int b);
 enddecl
 
+int funct(int a, int b){
+  decl
+    tuple student(int roll, str name) s1;
+  enddecl
+
+  begin
+   return a + b;
+  end;
+}
+
 int main(){
   decl
     tuple student(int roll, str name) s1, s2;
@@ -17,10 +27,10 @@ int main(){
   enddecl
 
   begin
-    s1.roll = 10;
-    s1.name = "lukman";
-    s2 = s1;
-    write(s2.roll);
-    write(s2.name);
+    read(s1.roll);
+    read(s2.roll);
+
+    temp = funct(s1.roll, s2.roll);
+    write(temp);
   end;
 }

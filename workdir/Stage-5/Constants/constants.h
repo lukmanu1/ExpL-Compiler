@@ -15,6 +15,7 @@ enum ast_node_type {
     NODE_TYPE_VALUE,
     NODE_TYPE_STRING,
     NODE_TYPE_ID,
+    NODE_TYPE_TUPLE,
     NODE_TYPE_DEREF,
     NODE_TYPE_REF,
     NODE_TYPE_WRITE,

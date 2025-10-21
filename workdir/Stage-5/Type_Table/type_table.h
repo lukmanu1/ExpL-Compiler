@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct Paramstruct;
+typedef struct Paramstruct p_node;
+
 typedef struct Table_type table_type;
 typedef struct Field field;
 
@@ -41,7 +44,14 @@ extern struct primitive_types* default_types;
 extern table_type* table_head;
 extern table_type* table_tail;
 
+
 table_type* create_type_table(char* name, int size);
 void initialize_type_table();
+
+field* create_field_node(char* name, table_type* type);
+field* append_field(field* head, field* new_field);
+table_type* type_table_install(char* name, field* fields);
+table_type* tLookup(char* name);
+void validate_type(char* data_type, p_node* fields);
 
 #endif

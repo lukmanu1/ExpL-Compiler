@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<string.h>
 
+
 int binding_addr = 4096;
 int flag_label = 0;
 
@@ -114,6 +115,30 @@ p_node* param_look_up(char* name){
     }
 
     return NULL;
+}
+
+
+p_node* append_param(p_node* head, p_node* new_node) {
+    p_node* temp = head;
+
+
+    while (temp->next) {
+    
+        if (strcmp(temp->name, new_node->name) == 0) {
+            perror("Duplicate parameter name found in function parameter list.\n");
+        }
+        temp = temp->next;
+    }
+
+    
+    if (strcmp(temp->name, new_node->name) == 0) {
+        perror("Duplicate parameter name found in function parameter list.\n");
+    }
+
+    
+    temp->next = new_node;
+
+    return head;
 }
 
 

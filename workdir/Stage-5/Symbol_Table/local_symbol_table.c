@@ -14,7 +14,7 @@ lst_node* create_lst_node(char* name, table_type* type){
     new_node->type = type;
     new_node->binding = lst_binding;
     new_node->next = NULL;
-    lst_binding++;
+    lst_binding+= type->size;
 
     return new_node;
 }
@@ -54,6 +54,7 @@ lst_node* lst_look_up(char* name){
 int param_count(p_node* param_list){
     p_node* temp = param_list;
     while(temp){
+        // lst_binding -= temp->type->size;
         temp = temp->next;
         lst_binding--;
     }

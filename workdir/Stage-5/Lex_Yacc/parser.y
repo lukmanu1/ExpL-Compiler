@@ -27,6 +27,7 @@
     gst_node* GST_node;
     lst_node* LST_node;
     p_node* param_node;
+    field* field_node;
 }
 
 %token PBEGIN END
@@ -38,14 +39,15 @@
 %token INT STR
 %token MAIN
 %token RETURN
+%token TUPLE TYPE ENDTYPE
 
-%type <param_node> ParamList
-%type <AST_node> Param
+%type <param_node> ParamList Param
 %token <AST_node> NUM ID STRING_LITERAL
 %type <LST_node> LDecList LdeclBlock
 
 %type <AST_node> Slist Stmt InputStmt OutputStmt AsgStmt E Body FDefBlock Fdef ArgList
 %type <AST_node> IfStmt whileStmt doWhileStmt repeatStmt breakStmt continueStmt returnStmt
+%type <field_node> Field FieldList
 
 %right EQUAL
 %left LT GT LE GE EQ NE
@@ -54,10 +56,24 @@
 
 %%
 
-Program      :  GDeclBlock FDefBlock MainBlock          { }
-             |  GDeclBlock MainBlock                    { }
-             |  MainBlock                               { }
+Program      :  TypeDecl GDeclBlock FDefBlock MainBlock          { }
+             |  TypeDecl GDeclBlock MainBlock                    { }
+             |  TypeDecl MainBlock                               { }
+             |  MainBlock
              ;
+
+TypeDecl     : TYPE ID '{' FieldList '}' ENDTYPE        { type_table_install($2->name, $4); }
+             | TYPE ENDTYPE                             { }
+             ;
+
+FieldList    : FieldList Field ';'                         { $$ = append_field($1, $2); }
+             | Field ';'                                   { $$ = $1; }
+             ;
+
+Field        : INT ID                                   { $$ = create_field_node($2->name, default_types->int_type); }
+             | STR ID                                   { $$ = create_field_node($2->name, default_types->str_type); }
+             ;
+
 
 GDeclBlock  : DECL GDeclList ENDDECL                    {  print_gstable(); }
             | DECL ENDDECL
@@ -74,9 +90,9 @@ GidList     : GidList ',' Gid
             | Gid
             ;
 
-Gid         : ID                                        { gst_install($1->name, type_variable, 1, 0, NULL); }
-            | ID '[' NUM ']'                            { gst_install($1->name, type_variable, 1, $3->value.iVal, NULL); }
-            | ID '(' ParamList ')'                      { gst_install($1->name, type_variable, 1, 0, $3); param_head = NULL; param_tail = NULL; }
+Gid         : ID                                        { gst_install($1->name, type_variable, type_variable->size, 0, NULL); }
+            | ID '[' NUM ']'                            { gst_install($1->name, type_variable, type_variable->size, $3->value.iVal, NULL); }
+            | ID '(' ParamList ')'                      { gst_install($1->name, type_variable, 0, 0, $3); }
             | '*' ID                                    
                                                         { 
                                                             if(strcmp(type_variable->name, default_types->int_type->name) == 0){
@@ -94,22 +110,22 @@ FDefBlock   : FDefBlock Fdef                            { create_connector_node(
 
 Fdef :
     INT ID '(' ParamList ')' '{' LdeclBlock             { type_function = default_types->int_type; lst_binding = -2; code_gen_function_definition(outputFile, $2); add_param_list_to_lst($4); lst_binding = 1; lst_display(); }
-    Body '}'                                            { $$ = create_function_definition_node(default_types->int_type, $2, $4, $9); lst_head = lst_tail = NULL; param_head = param_tail = NULL;  codeGen(outputFile, $9); code_gen_exit_function(outputFile); }
+    Body '}'                                            { $$ = create_function_definition_node(default_types->int_type, $2, $4, $9); lst_head = lst_tail = NULL; codeGen(outputFile, $9); code_gen_exit_function(outputFile); }
 
   | STR ID '(' ParamList ')' '{' LdeclBlock             { type_function = default_types->str_type; lst_binding = -2; code_gen_function_definition(outputFile, $2); add_param_list_to_lst($4); lst_binding = 1; lst_display(); }
-    Body '}'                                            { $$ = create_function_definition_node(default_types->str_type, $2, $4, $9); lst_head = lst_tail = NULL; param_head = param_tail = NULL;  codeGen(outputFile, $9); code_gen_exit_function(outputFile); }
+    Body '}'                                            { $$ = create_function_definition_node(default_types->str_type, $2, $4, $9); lst_head = lst_tail = NULL; codeGen(outputFile, $9); code_gen_exit_function(outputFile); }
 ;
 
 
-ParamList   : ParamList ',' Param                       { $$ = param_head; }
-            | Param                                     { $$ = param_head; }
+ParamList   : ParamList ',' Param                       { $$ = append_param($$, $3); }
+            | Param                                     { $$ = $1; }
             |                                           { $$ = NULL; }
             ;
 
-Param       : INT '*' ID                               { param_install($3->name, default_types->int_ptr_type); $$ = $3; }
-            | STR '*' ID                               { param_install($3->name, default_types->str_ptr_type); $$ = $3; }
-            | INT ID                                   { param_install($2->name, default_types->int_type); $$ = $2; }
-            | STR ID                                   { param_install($2->name, default_types->str_type); $$ = $2; }
+Param       : INT '*' ID                               { $$ = create_p_node($3->name, default_types->int_ptr_type); }
+            | STR '*' ID                               { $$ = create_p_node($3->name, default_types->str_ptr_type); }
+            | INT ID                                   { $$ = create_p_node($2->name, default_types->int_type); }
+            | STR ID                                   { $$ = create_p_node($2->name, default_types->str_type); }
             ;
 
 LdeclBlock  : DECL LDecList ENDDECL                     { $$ = lst_head; }
@@ -147,6 +163,10 @@ IdList
 
 Type        : INT                                       { type_variable = default_types->int_type; }
             | STR                                       { type_variable = default_types->str_type; }
+            | TUPLE ID '(' ParamList ')'                {
+                                                            validate_type($2->name, $4); 
+                                                            type_variable = tLookup($2->name);   /* Important! */
+                                                        }
             ;
 
 
@@ -196,6 +216,11 @@ InputStmt
             ast_node* array_node = create_array_node($3, $5);
             $$ = create_read_node(array_node);
         }
+    | READ '(' ID '.' ID ')' ';'
+        {
+            ast_node* tuple_node = create_tuple_node($3, $5);
+            $$ = create_read_node(tuple_node);
+        }
     ;
 
 OutputStmt
@@ -221,6 +246,11 @@ AsgStmt
         {
             ast_node* deref_node = create_deref_node($2);
             $$ = create_assign_node(deref_node, $4);
+        }
+    | ID '.' ID EQUAL E ';'
+        {
+            ast_node* tuple_node = create_tuple_node($1, $3);
+            $$ = create_assign_node(tuple_node, $5);
         }
     ;
 
@@ -292,6 +322,8 @@ E   : E '+' E                                           { $$ = create_operator_n
     | AND ID                                            { $$ = create_ref_node($2); }   
 
     | '*' ID                                            { $$ = create_deref_node($2); }
+
+    | ID '.' ID                                         { $$ = create_tuple_node($1, $3); }
 
     ;
 

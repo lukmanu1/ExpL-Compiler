@@ -1,6 +1,6 @@
 #include "code_generation.h"
 
-
+void yyerror(const char *s);
 int loop_label = 0;
 int if_label = 0;
 int reg = -1;
@@ -114,10 +114,17 @@ void code_gen_function_definition(FILE* fptr, ast_node* funct){
 
     lst_node* ltemp = lst_head;
 
-    int lst_reg = get_reg();
+    int count = 0;
     while(ltemp){
-        fprintf(fptr, "PUSH R%d\n", lst_reg);
+        count += ltemp->type->size;
         ltemp = ltemp->next;
+    }
+
+    int i = 0;
+    int lst_reg = get_reg();
+    while(i < count){
+        fprintf(fptr, "PUSH R%d\n", lst_reg);
+        i++;
     }
 
     free_reg();
@@ -131,10 +138,23 @@ int code_gen_main_function(FILE* fptr){
 
     lst_node* ltemp = lst_head;
 
-    int lst_reg = get_reg();
+    // int lst_reg = get_reg();
+    // while(ltemp){
+    //     fprintf(fptr, "PUSH R%d\n", lst_reg);
+    //     ltemp = ltemp->next;
+    // }
+    
+    int count = 0;
     while(ltemp){
-        fprintf(fptr, "PUSH R%d\n", lst_reg);
+        count += ltemp->type->size;
         ltemp = ltemp->next;
+    }
+
+    int i = 0;
+    int lst_reg = get_reg();
+    while(i < count){
+        fprintf(fptr, "PUSH R%d\n", lst_reg);
+        i++;
     }
 
     free_reg();
@@ -269,6 +289,26 @@ int code_gen_id(FILE* fptr, ast_node* node){
     }
 }
 
+int code_gen_tuple(FILE* fptr, ast_node* node) {
+    int val_reg = get_reg();
+    int addr_reg = 0;
+
+    if (node->Lentry) {
+        // --- Local Tuple Variable ---
+        addr_reg = resolve_address(fptr, node);
+        fprintf(fptr, "MOV R%d, [R%d]\n", val_reg, addr_reg);
+    } 
+    else {
+        // --- Global Tuple Variable ---
+        addr_reg = resolve_address(fptr, node);
+        fprintf(fptr, "MOV R%d, [R%d]\n", val_reg, addr_reg); 
+    }
+
+    free_reg(); 
+
+    return val_reg;
+}
+
 int code_gen_operator(FILE *fptr, ast_node* node, const char *op) {
     int left_reg = codeGen(fptr, node->ptr1);
     int right_reg = codeGen(fptr, node->ptr2);
@@ -283,6 +323,20 @@ int code_gen_write(FILE* fptr, ast_node* node){
     write_system_call(fptr, val_reg);
     free_reg();
     return -1;
+}
+
+int find_field_index(field* field_list, char* field_name) {
+    field* temp = field_list;
+
+    while (temp) {
+        if (strcmp(temp->name, field_name) == 0) {
+            return temp->field_index - 1;  
+        }
+        temp = temp->next;
+    }
+
+    yyerror("Field not found in tuple type.\n"); 
+    return -1; 
 }
 
 int resolve_address(FILE* fptr, ast_node* node){
@@ -311,6 +365,26 @@ int resolve_address(FILE* fptr, ast_node* node){
         fprintf(fptr, "MOV R%d, [R%d]\n", addr_deref_node, addr_reg);
         free_reg();
         return addr_deref_node;
+    }else if(node->nodetype == NODE_TYPE_TUPLE){
+
+        int addr_reg = get_reg();
+        int address = 0;
+        int field_offset = 0;
+
+        if(node->Lentry){
+
+            field_offset = find_field_index(node->Lentry->type->fields, node->ptr1->name);
+            address = node->Lentry->binding + field_offset;
+
+            fprintf(fptr, "MOV R%d, %d\n", addr_reg, address);  
+            fprintf(fptr, "ADD R%d, BP\n", addr_reg);   
+        }else {
+
+            field_offset = find_field_index(node->Gentry->type->fields, node->ptr1->name);
+            address = node->Gentry->binding + field_offset;
+            fprintf(fptr, "MOV R%d, %d\n",addr_reg, address);
+        }
+        return addr_reg;
     }
     else {
         fprintf(stderr, "resolve_address: not an identifier\n");
@@ -461,6 +535,46 @@ int code_gen_deref_node(FILE* fptr, ast_node* node){
     return val_reg;
 }
 
+int code_gen_tuple_copy(FILE* fptr, ast_node* node) {
+    int addr_reg_t2 = resolve_address(fptr, node->ptr1);
+    int addr_reg_t1 = resolve_address(fptr, node->ptr2);
+
+    int num_fields = node->ptr1->type->num_fields;
+
+    int index_reg = get_reg();
+    int size_reg = get_reg();
+    int cmp_reg   = get_reg();
+
+    fprintf(fptr, "MOV R%d, 0\n", index_reg);
+    fprintf(fptr, "MOV R%d, %d\n", size_reg, num_fields);
+
+    int temp_label = loop_label++;
+
+    fprintf(fptr, "LOOP%d:\n", temp_label);
+    fprintf(fptr, "MOV R%d, R%d\n", cmp_reg, index_reg);
+    fprintf(fptr, "LT R%d, R%d\n", cmp_reg, size_reg);
+    fprintf(fptr, "JZ R%d, END_LOOP%d\n", cmp_reg, temp_label);
+
+    int val_reg = get_reg();
+    fprintf(fptr, "MOV R%d, [R%d]\n", val_reg, addr_reg_t1);
+    fprintf(fptr, "MOV [R%d], R%d\n", addr_reg_t2, val_reg);
+    free_reg(); // val_reg
+
+    fprintf(fptr, "ADD R%d, 1\n", index_reg);
+    fprintf(fptr, "ADD R%d, 1\n", addr_reg_t1);
+    fprintf(fptr, "ADD R%d, 1\n", addr_reg_t2);
+
+    fprintf(fptr, "JMP LOOP%d\n", temp_label);
+    fprintf(fptr, "END_LOOP%d:\n", temp_label);
+
+    free_reg(); // cmp_reg
+    free_reg(); // size_reg
+    free_reg(); // index_reg
+
+    return -1;
+}
+
+
 int codeGen(FILE* fptr, ast_node* node){
     switch (node->nodetype)
     {
@@ -472,6 +586,9 @@ int codeGen(FILE* fptr, ast_node* node){
         
         case NODE_TYPE_ID:
             return code_gen_id(fptr, node);
+
+        case NODE_TYPE_TUPLE:
+            return code_gen_tuple(fptr, node);
         
         case NODE_TYPE_REF:
             return code_gen_ref_node(fptr, node);
@@ -540,7 +657,12 @@ int codeGen(FILE* fptr, ast_node* node){
             return code_gen_if_else(fptr, node);
         
         case NODE_TYPE_ASSIGN:
-            return code_gen_assign(fptr, node);
+
+            if(node->ptr1->type->fields != NULL){
+                return code_gen_tuple_copy(fptr, node);
+            }
+            else
+                return code_gen_assign(fptr, node);
         
         case NODE_TYPE_CONNECTOR:
             codeGen(fptr, node->ptr1);
