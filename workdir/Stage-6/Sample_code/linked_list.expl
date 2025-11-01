@@ -1,0 +1,63 @@
+type
+  List
+  {
+    int data;
+    List next;
+  }
+endtype
+
+decl
+  List head;
+  int display(List node);
+enddecl
+
+int display(List node)
+{
+  decl
+    int temp;
+  enddecl
+
+  begin
+    if (node != null) then
+      write(node.data);
+      temp = display(node.next);
+    endif;
+    return 0;
+  end;
+}
+
+int main()
+{
+  decl
+    int length, x, temp;
+    List p, q;
+  enddecl
+
+  begin
+    initialise();
+    
+    head = null;
+    read(length);
+
+    while (length != 0){
+      read(x);
+      p = alloc();
+      p.data = x;
+      p.next = null;
+
+      if (head == null) then
+        head = p;
+        q = p;
+      else
+        q.next = p;
+        q = q.next;
+      endif;
+
+      length = length - 1;
+    }
+
+    temp = display(head);
+
+    return 0;
+  end;
+}

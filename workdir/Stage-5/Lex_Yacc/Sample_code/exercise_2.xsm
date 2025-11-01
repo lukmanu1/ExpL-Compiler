@@ -1,0 +1,36 @@
+type
+  student{
+    int roll;
+    str name;
+  }
+endtype
+
+decl
+  tuple student(int roll, str name) a, b, c;
+  int funct(int a, int b);
+enddecl
+
+int funct(int a, int b){
+  decl
+    tuple student(int roll, str name) s1;
+  enddecl
+
+  begin
+   return a + b;
+  end;
+}
+
+int main(){
+  decl
+    tuple student(int roll, str name) s1, s2;
+    int temp;
+  enddecl
+
+  begin
+    read(s1.roll);
+    read(s2.roll);
+
+    temp = funct(s1.roll, s2.roll);
+    write(temp);
+  end;
+}
