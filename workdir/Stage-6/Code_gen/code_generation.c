@@ -122,7 +122,7 @@ int code_gen_system_calls(FILE* fptr, ast_node* node){
         case NODE_TYPE_FREE_FUNCT_CALL:{
             int val_reg = codeGen(fptr, node->arglist);
             free_reg();
-            ret = system_call_function(fptr, "alloc", val_reg, 0);
+            ret = system_call_function(fptr, "free", 0, val_reg);
             break;
         }
 
@@ -373,7 +373,7 @@ int find_field_index(field *field_list, char *field_name)
     {
         if (strcmp(temp->name, field_name) == 0)
         {
-            return temp->field_index - 1;
+            return temp->field_index;
         }
         temp = temp->next;
     }
@@ -400,7 +400,7 @@ int resolve_address(FILE *fptr, ast_node *node)
     }
     else if (node->nodetype == NODE_TYPE_ARRAY)
     {
-
+        
         ast_node *id_node = node->ptr1;
         int addr_reg = resolve_address(fptr, id_node);
         int index_reg = codeGen(fptr, node->ptr2);
@@ -414,31 +414,23 @@ int resolve_address(FILE *fptr, ast_node *node)
         ast_node *id_node = node->ptr1;
         int addr_deref_node = get_reg();
         int addr_reg = resolve_address(fptr, id_node);
+        
         fprintf(fptr, "MOV R%d, [R%d]\n", addr_deref_node, addr_reg);
+        
         free_reg();
         return addr_deref_node;
     }
     else if (node->nodetype == NODE_TYPE_TUPLE)
     {
-        int addr_reg = get_reg();
+        int addr_reg = resolve_address(fptr, node->ptr1);
         int field_offset = 0;
-
-        if (node->ptr1->Lentry)
-        {
-
-            fprintf(fptr, "MOV R%d, %d\n", addr_reg, node->ptr1->Lentry->binding);
-            fprintf(fptr, "ADD R%d, BP\n", addr_reg);
-            fprintf(fptr, "MOV R%d, [R%d]\n", addr_reg, addr_reg);
-            field_offset = find_field_index(node->ptr1->Lentry->type->fields, node->ptr2->name);
-        }
-        else
-        {
-            fprintf(fptr, "MOV R%d, %d\n", addr_reg, node->ptr1->Gentry->binding);
-            fprintf(fptr, "MOV R%d, [R%d]\n", addr_reg, addr_reg);
-            field_offset = find_field_index(node->ptr1->Gentry->type->fields, node->ptr2->name);
-        }
-
+        
+        fprintf(fptr, "MOV R%d, [R%d]\n", addr_reg, addr_reg);
+        field_offset = find_field_index(node->ptr1->type->fields, node->ptr2->name);
+        
         fprintf(fptr, "ADD R%d, %d\n", addr_reg, field_offset);
+        
+
         return addr_reg;
     }
     else if (node->nodetype == NODE_TYPE_TUPLE_LIST)
@@ -644,6 +636,14 @@ int code_gen_tuple_copy(FILE *fptr, ast_node *node)
     return -1;
 }
 
+int code_gen_free_function(FILE* fptr, ast_node* node){
+    code_gen_system_calls(fptr, node);
+    int addr_reg = resolve_address(fptr, node->arglist);
+    fprintf(fptr, "MOV [R%d], -1000000\n", addr_reg);
+    free_reg();
+    return -1;
+}
+
 int codeGen(FILE *fptr, ast_node *node)
 {
     switch (node->nodetype)
@@ -749,10 +749,9 @@ int codeGen(FILE *fptr, ast_node *node)
         free_reg(); // return valued is not used anywhere what is why this free, function return register holding the return value.
         return -1;
 
-    case NODE_TYPE_FREE_FUNCT_CALL:{}
-        code_gen_system_calls(fptr, node);            
-        free_reg(); 
-        return -1; // HERE I AM AVOIDING free_reg function, i should add here one free_reg function, code_gen_free_funciton_call function is returning a Reg holding 1000, which is not going to be used any-where in the code according to my grammar.
+    case NODE_TYPE_FREE_FUNCT_CALL:
+        return code_gen_free_function(fptr, node);
+         // HERE I AM AVOIDING free_reg function, i should add here one free_reg function, code_gen_free_funciton_call function is returning a Reg holding 1000, which is not going to be used any-where in the code according to my grammar.
 
     case NODE_TYPE_ALLOC_FUNCT_CALL:
         return code_gen_system_calls(fptr, node);

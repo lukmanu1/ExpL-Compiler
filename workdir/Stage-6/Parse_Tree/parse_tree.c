@@ -287,6 +287,7 @@ ast_node* create_tuple_node(ast_node* tuple, ast_node* field_node) {
 
     if (local_temp != NULL) {
         tuple->Lentry = local_temp;
+        tuple->type = local_temp->type;
 
         if (tuple->Lentry->type == NULL || tuple->Lentry->type->fields == NULL) {
             yyerror("Tuple variable has no field definitions.\n");
@@ -302,6 +303,7 @@ ast_node* create_tuple_node(ast_node* tuple, ast_node* field_node) {
         }
 
         tuple->Gentry = global_temp;
+        tuple->type = global_temp->type;
 
         if (tuple->Gentry->type == NULL || tuple->Gentry->type->fields == NULL) {
             yyerror("Tuple variable has no field definitions.\n");
@@ -317,6 +319,19 @@ ast_node* create_tuple_node(ast_node* tuple, ast_node* field_node) {
     ast_node* tuple_node = create_ast_node(NODE_TYPE_TUPLE, NULL, val);
 
     tuple_node->ptr1 = tuple;
+    tuple_node->ptr2 = field_node;
+    tuple_node->type = field_type->type;
+
+    return tuple_node;
+}
+
+ast_node* create_tuple_array_node(ast_node* arr, ast_node* expr, ast_node* field_node){
+    ast_node* arr_node = create_array_node(arr, expr);
+    field* field_type = find_field(arr_node->type->fields, field_node->name);
+
+    union Constant val;
+    ast_node* tuple_node = create_ast_node(NODE_TYPE_TUPLE, NULL, val);
+    tuple_node->ptr1 = arr_node;
     tuple_node->ptr2 = field_node;
     tuple_node->type = field_type->type;
 

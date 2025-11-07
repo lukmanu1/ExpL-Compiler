@@ -60,7 +60,7 @@ int code_gen_tuple(FILE* fptr, ast_node* node);
 int code_gen_tuple_copy(FILE* fptr, ast_node* node);
 int code_gen_tuple_list(FILE* fptr, ast_node* node);
 
-
+int code_gen_free_function(FILE* fptr, ast_node* node);
 int code_gen_system_calls(FILE* fptr, ast_node* node);
 int system_call_function(FILE *fptr, char* system_call, int arg1, int arg2);
 

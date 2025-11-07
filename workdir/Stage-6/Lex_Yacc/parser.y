@@ -222,9 +222,9 @@ Stmt
     | returnStmt                                        { $$ = $1; }
     | ID EQUAL ALLOC'(' ')' ';'                         { $$ = create_alloc_function_call_node($1); }
     | Field EQUAL ALLOC'(' ')' ';'                      { $$ = create_alloc_function_call_node($1); }
-    | FREE '(' ID ')' ';'                               { $$ = create_free_function_call_node($3); } 
-    | FREE '(' Field ')' ';'                            { $$ = create_free_function_call_node($3); } 
+    | FREE '(' E ')' ';'                                { $$ = create_free_function_call_node($3); } 
     | INIT '(' ')' ';'                                  { $$ = create_init_function_call_node(); }
+    | ID '[' E ']' EQUAL ALLOC '(' ')' ';'              { ast_node* arr_node = create_array_node($1, $3); $$ = create_alloc_function_call_node(arr_node); }
     ;
 
 InputStmt
@@ -272,26 +272,6 @@ AsgStmt
         {
             $$ = create_assign_node($1, $3);
         }
-    /* | Field EQUAL NULL_NODE ';'
-        {
-            union Constant value;
-            ast_node* null_node = create_ast_node(NODE_TYPE_NULL, NULL, value);
-            null_node->type = $1->type;
-            $$ = create_assign_node($1, null_node);
-        } */
-    /* | ID EQUAL NULL_NODE ';'
-        {
-            ast_node* id_node = create_id_node($1);
-            if(id_node->type->fields == NULL){
-                yyerror("Assigning NULL to primitive data_type\n");
-            }
-
-            union Constant value;
-            ast_node* null_node = create_ast_node(NODE_TYPE_NULL, NULL, value);
-            null_node->type = id_node->type;
-            $$ = create_assign_node(id_node, null_node);
-
-        } */
     ;
 
 IfStmt
@@ -372,6 +352,7 @@ E   : E '+' E                                           { $$ = create_operator_n
 
 Field : Field '.' ID                                    { $$ = extend_tuple_node($1, $3); }
       | ID '.' ID                                       { $$ = create_tuple_node($1, $3); }
+      | ID '[' E ']' '.' ID                             { $$ = create_tuple_array_node($1, $3, $6); }
       ; 
 
 ArgList : ArgList ',' E                                 { $$ = append_arg_list($$, $3); }

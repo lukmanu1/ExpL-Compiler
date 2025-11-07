@@ -43,6 +43,7 @@ ast_node* create_id_node(ast_node* id);
 field* find_field(field* field_list, char* field_name);
 ast_node* create_tuple_node(ast_node* tuple, ast_node* field_node);
 ast_node* extend_tuple_node(ast_node* tuple_list, ast_node* field_node);
+ast_node* create_tuple_array_node(ast_node* arr, ast_node* expr, ast_node* field_node);
 ast_node* create_ref_node(ast_node* id);
 ast_node* create_deref_node(ast_node* id);
 ast_node* create_operator_node(int node_type, ast_node* left, ast_node* right);

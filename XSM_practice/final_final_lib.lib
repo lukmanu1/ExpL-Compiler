@@ -90,7 +90,7 @@ MOV [1024], R2
 MOV R19, R0         
 JMP 208             
 MOV R0, SP          
-ADD R0, -4          
+ADD R0, -3          
 MOV R0, [R0]        
 MOV R1, [1024]      
 MOV [1024], R0      

@@ -31,7 +31,7 @@ field* create_field_node(char* name, table_type* type) {
     new_field->name = strdup(name);
     new_field->type = type;
     new_field->field_index = 0;
-    new_field->next = NULL;   // ✅ important initialization
+    new_field->next = NULL;   
     return new_field;
 }
 
