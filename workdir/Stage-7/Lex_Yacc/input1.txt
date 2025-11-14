@@ -1,0 +1,44 @@
+class
+    calculator{
+        decl
+            int val1;
+            int sum(int x, int y);
+            int mult(int x, int y);
+        enddecl
+
+        int sum(int x, int y){
+            decl
+            enddecl
+
+            begin
+                return x + y;
+            end;
+        }
+
+        int mult(int x, int y){
+            decl
+            enddecl
+
+            begin
+                return x * y;
+            end;
+        }
+    }
+endclass
+
+int main(){
+    decl
+        calculator obj1;
+        int val1, val2;
+    enddecl
+        
+    begin
+
+        initialise();
+        read(val1);
+        read(val2);
+        write(obj1.sum(val1,val2));
+        return 1;
+    end;
+
+}

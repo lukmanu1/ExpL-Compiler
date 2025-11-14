@@ -1,0 +1,67 @@
+class
+    fact{
+        decl
+            int x;
+            int findfactorial(int n);
+        enddecl
+
+        int findfactorial(int n){
+            decl
+                int p;
+                int ret;
+            enddecl
+            begin
+                if(n<=1)then
+                    p=1;
+                else
+                    ret = self.findfactorial(n-1);
+                    p = n * ret;
+                endif;
+
+                return p;
+            end;
+        }
+    }
+    
+    testfactsum{
+        decl
+            fact o1;
+            int testfun(int n);
+        enddecl
+
+        int testfun(int n){
+            decl
+                int sum;
+                int val;
+            enddecl
+            begin
+                self.o1=new(fact);
+                sum=0;
+                while(n!=0){
+                    val = self.o1.findfactorial(n);
+                    sum = sum + val;
+                    n=n-1;
+                }
+                return sum;
+            end;
+        }
+    }
+endclass
+
+decl
+    testfactsum obj;
+enddecl
+
+int main(){
+    decl
+        int x,n;
+    enddecl
+
+    begin
+        initialise();
+        obj=new(testfactsum);
+        read(n);
+        write(obj.testfun(n));
+        return 1;
+    end;
+}
