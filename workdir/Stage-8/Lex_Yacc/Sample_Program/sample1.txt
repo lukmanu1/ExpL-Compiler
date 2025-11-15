@@ -1,0 +1,70 @@
+class
+    A{
+        decl
+            int i;
+            int f0(int x);
+            int f1(int y);
+        enddecl
+
+        int f0(int x) {
+            decl
+                int c;
+            enddecl
+            begin
+                c = self.f1(1);
+                write(self.i);
+                return 1;
+            end;
+        }
+        int f1(int y) {
+            decl
+            enddecl
+            begin
+                self.i=0;
+                write("In A F1");
+                return 1;
+            end;
+        }
+    }
+
+    B extends A{
+        decl
+            int b;
+            int f1(int y);
+        enddecl
+
+        int f1(int y) {
+            decl
+            enddecl
+
+            begin
+                self.i=1;
+                write("In B F1");
+                return 1;
+            end;
+        }
+    }
+endclass
+
+decl
+    int n;
+    A obj;
+enddecl
+
+int main() {
+    decl
+    enddecl
+    begin
+        initialise();
+        read(n);
+        
+        if(n>0) then
+            obj = new(A);
+        else
+            obj = new(B);
+        endif;
+
+        n = obj.f0(1);
+        return 1;
+    end;
+}

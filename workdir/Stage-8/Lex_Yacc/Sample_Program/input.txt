@@ -1,0 +1,76 @@
+class
+    A{
+        decl
+            int a;
+            int getA(int arg);
+            int setA(int x);
+        enddecl
+
+        int getA(int arg){
+            decl
+            enddecl
+
+            begin
+                return self.a;
+            end;
+        }
+
+        int setA(int x){
+            decl
+            enddecl
+
+            begin
+             self.a = x;
+             return 100;
+            end;
+        }
+    }
+
+    B extends A{
+        decl
+            int b;
+            int funct(int arg);
+            int setA(int x);
+        enddecl
+
+        int funct(int arg){
+            decl
+            enddecl
+
+            begin
+                return self.b;
+            end;
+        }
+
+        int setA(int x){
+            decl
+            enddecl
+
+            begin
+                self.a = x;
+                return 10;
+            end;
+        }
+    }
+endclass
+
+decl
+    A a1;
+    B b1;
+enddecl
+
+int main(){
+    decl
+        int x;
+    enddecl
+
+    begin
+        initialise();
+        a1 = new(B);
+        x = a1.setA(100000);
+        write(x);
+        x = a1.getA(1);
+        write(x);
+        return 0;
+    end;
+}

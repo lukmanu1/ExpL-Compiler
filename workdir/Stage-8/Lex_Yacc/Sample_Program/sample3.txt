@@ -1,0 +1,84 @@
+class Rectangle {
+    decl
+        int length;
+        int breadth;
+        int setdimensions(int x);
+        int area(int y);
+    enddecl
+
+    int area(int y) {
+        decl
+        enddecl
+        begin
+            return self.length * self.breadth;
+        end;
+    }
+
+    int setdimensions(int x) {
+        decl
+        enddecl
+        begin
+            write("Enter length ");
+            read(self.length);
+
+            write("Enter breadth");
+            read(self.breadth);
+
+            return 0;
+        end;
+    }
+}
+
+Square extends Rectangle {
+    decl
+        int temp;
+        int setdimensions(int x);
+    enddecl
+
+    int setdimensions(int x) {
+        decl
+        enddecl
+        begin
+            write("Enter side sq");
+            read(self.length);
+
+            self.breadth = self.length;
+
+            return 0;
+        end;
+    }
+}
+
+endclass
+
+decl
+    Rectangle obj;
+enddecl
+
+int main() {
+    decl
+        int x;
+    enddecl
+
+    begin
+        initialise();
+
+        write("Enter");
+        write("1.Rectangle");
+        write("2.Square");
+
+        read(x);
+
+        if(x == 1) then
+            obj = new(Rectangle);
+        else
+            obj = new(Square);
+        endif;
+
+        x = obj.setdimensions(1);
+
+        write(obj.area(1));
+
+        return 0;
+    end;
+}

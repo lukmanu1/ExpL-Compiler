@@ -1,0 +1,46 @@
+#ifndef GLOBAL_SYMBOL_TABLE_H
+#define GLOBAL_SYMBOL_TABLE_H
+#include "./../Type_Table/type_table.h"
+#include "./../ClassTable/class_table.h"
+
+typedef struct Gsymbol gst_node;
+typedef struct Paramstruct p_node;
+
+struct Gsymbol{
+
+    char* name;
+    table_type* type;
+
+    Classtable *Ctype;
+
+    int out_size;
+    int inner_size;
+
+    int binding;
+
+    int flag_label;
+
+    p_node* param_list;
+    gst_node* next;
+
+};
+
+struct Paramstruct{
+    char* name;
+    table_type* type;
+    p_node* next;
+};
+
+gst_node* create_gst_node(char* name, table_type* type, int inner_size, int outer_size, p_node* param_list, Classtable* Ctype);
+void gst_install(char *name, table_type* type, Classtable* Ctype, int outer_size, int inner_size, p_node* param_list);
+gst_node* look_up(char* name);
+void print_gstable();
+
+p_node* create_p_node(char* name, table_type* type);
+void param_install(char* name, table_type* type);
+p_node* param_look_up(char* name);
+p_node* append_param(p_node* head, p_node* new_node);
+
+void print_gstable();
+
+#endif
