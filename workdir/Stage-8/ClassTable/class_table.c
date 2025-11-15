@@ -32,14 +32,24 @@ Fieldlist *Class_Flookup(Classtable *Ctype, char *Name) {
     return NULL;
 }
 
-Memberfunclist *Class_Mlookup(Classtable *Ctype, char *Name) {
-    Memberfunclist *mth = Ctype->Vfuncptr;
+Memberfunclist* Class_Mlookup(Classtable *cptr, char *name, p_node *Paramlist) {
+
+    Memberfunclist *mth = cptr->Vfuncptr;
+    Memberfunclist *exactMatch = NULL;
+
     while (mth != NULL) {
-        if (strcmp(mth->Name, Name) == 0)
-            return mth;
+        if (strcmp(mth->Name, name) == 0) {
+
+            // try param matching -> override or find exact for call
+            if (CompareParamLists(mth->Paramlist, Paramlist)) {
+                exactMatch = mth;
+                break;
+            }
+        }
         mth = mth->Next;
     }
-    return NULL;
+
+    return exactMatch;  // NULL means: overload or new method
 }
 
 /* --------------------- CLASS INSTALLATION --------------------- */
@@ -208,56 +218,158 @@ int CompareParamLists(p_node *p1, p_node *p2) {
     return (p1 == NULL && p2 == NULL);
 }
 
+// void Class_Minstall(Classtable *cptr, char *name, table_type *type, p_node *Paramlist) {
+//     if (cptr == NULL) {
+//         printf("Class Error: No active class to install method '%s'.\n", name);
+//         exit(1);
+//     }
+
+//     // Look for existing method with same name in Vfuncptr
+//     Memberfunclist *existing = Class_Mlookup(cptr, name, Paramlist);
+
+//     // If method already exists with this name
+//     if (existing != NULL) {
+
+//         int inheritedMethodLimit = 0;
+//         if (cptr->Parentptr != NULL)
+//             inheritedMethodLimit = cptr->Parentptr->Methodcount;
+
+//         if (cptr->Parentptr != NULL && existing->Funcposition < inheritedMethodLimit) {
+//             /* ---------- This is an inherited method: OVERRIDING ---------- */
+
+//             // 1. Check if return type matches
+//             if (existing->Type != type) {
+//                 printf("Class Error: Return type mismatch in overriding method '%s' in class '%s'.\n",
+//                        name, cptr->Name);
+//                 exit(1);
+//             }
+
+//             // 2. Check parameter list compatibility
+//             if (!CompareParamLists(existing->Paramlist, Paramlist)) {
+//                 printf("Class Error: Parameter list mismatch in overriding method '%s' in class '%s'.\n",
+//                        name, cptr->Name);
+//                 exit(1);
+//             }
+
+//             // 3. Override: keep same Funcposition, assign new label & Paramlist if required
+//             existing->Paramlist = Paramlist;
+//             existing->Flabel = FUNC_LABEL_COUNTER++;
+//             // NOTE: Methodcount is NOT incremented for overriding
+//             return;
+//         } else {
+//             /* ---------- Method already defined in THIS class ---------- */
+//             printf("Class Error: Duplicate method '%s' in class '%s'.\n",
+//                    name, cptr->Name);
+//             exit(1);
+//         }
+//     }
+
+//     /* ---------- No existing method: NEW METHOD DEFINITION ---------- */
+
+//     if (cptr->Methodcount >= 8) {
+//         printf("Class Error: Too many methods in class '%s'. (Limit: 8)\n", cptr->Name);
+//         exit(1);
+//     }
+
+//     Memberfunclist *newMethod = (Memberfunclist *)malloc(sizeof(Memberfunclist));
+//     newMethod->Name = strdup(name);
+//     newMethod->Type = type;
+//     newMethod->Paramlist = Paramlist;
+//     newMethod->Funcposition = cptr->Methodcount++;     // New VFT slot
+//     newMethod->Flabel = FUNC_LABEL_COUNTER++;          // New function label
+//     newMethod->Next = NULL;
+
+//     if (cptr->Vfuncptr == NULL)
+//         cptr->Vfuncptr = newMethod;
+//     else {
+//         Memberfunclist *temp = cptr->Vfuncptr;
+//         while (temp->Next != NULL)
+//             temp = temp->Next;
+//         temp->Next = newMethod;
+//     }
+// }
+
+
+
 void Class_Minstall(Classtable *cptr, char *name, table_type *type, p_node *Paramlist) {
+
     if (cptr == NULL) {
         printf("Class Error: No active class to install method '%s'.\n", name);
         exit(1);
     }
 
-    // Look for existing method with same name in Vfuncptr
-    Memberfunclist *existing = Class_Mlookup(cptr, name);
+    // Lookup exact signature match -> used to determine override possibility
+    Memberfunclist *overrideTarget = Class_Mlookup(cptr, name, Paramlist);
 
-    // If method already exists with this name
-    if (existing != NULL) {
+    // Check if a method with the same name exists (for overload detection)
+    Memberfunclist *mth = cptr->Vfuncptr;
+    int sameNameExists = 0;
 
+    while (mth != NULL) {
+        if (strcmp(mth->Name, name) == 0)
+            sameNameExists = 1;
+        mth = mth->Next;
+    }
+
+    /* ---------------- OVERRIDE CASE ---------------- */
+    if (overrideTarget != NULL) {
+
+        // Find inherited method limit (from parent)
         int inheritedMethodLimit = 0;
         if (cptr->Parentptr != NULL)
             inheritedMethodLimit = cptr->Parentptr->Methodcount;
 
-        if (cptr->Parentptr != NULL && existing->Funcposition < inheritedMethodLimit) {
-            /* ---------- This is an inherited method: OVERRIDING ---------- */
-
-            // 1. Check if return type matches
-            if (existing->Type != type) {
-                printf("Class Error: Return type mismatch in overriding method '%s' in class '%s'.\n",
-                       name, cptr->Name);
-                exit(1);
-            }
-
-            // 2. Check parameter list compatibility
-            if (!CompareParamLists(existing->Paramlist, Paramlist)) {
-                printf("Class Error: Parameter list mismatch in overriding method '%s' in class '%s'.\n",
-                       name, cptr->Name);
-                exit(1);
-            }
-
-            // 3. Override: keep same Funcposition, assign new label & Paramlist if required
-            existing->Paramlist = Paramlist;
-            existing->Flabel = FUNC_LABEL_COUNTER++;
-            // NOTE: Methodcount is NOT incremented for overriding
-            return;
-        } else {
-            /* ---------- Method already defined in THIS class ---------- */
-            printf("Class Error: Duplicate method '%s' in class '%s'.\n",
+        // Ensure overriding only inherited method, not replacing a method defined in this class
+        if (overrideTarget->Funcposition >= inheritedMethodLimit) {
+            printf("Class Error: Duplicate method '%s' in class '%s'. Cannot override.\n",
                    name, cptr->Name);
             exit(1);
         }
+
+        // Return type must match
+        if (overrideTarget->Type != type) {
+            printf("Class Error: Return type mismatch in overriding method '%s' in class '%s'.\n",
+                   name, cptr->Name);
+            exit(1);
+        }
+
+        // Perform overriding: same Funcposition, new label
+        overrideTarget->Paramlist = Paramlist;
+        overrideTarget->Flabel = FUNC_LABEL_COUNTER++;
+        return;  // Methodcount not incremented
     }
 
-    /* ---------- No existing method: NEW METHOD DEFINITION ---------- */
+    /* ---------------- OVERLOAD CASE ---------------- */
+    if (sameNameExists) {
+        // Method with same name exists but signature is different -> OVERLOAD
 
+        if (cptr->Methodcount >= 8) {
+            printf("Class Error: Too many methods in class '%s'. Limit = 8.\n", cptr->Name);
+            exit(1);
+        }
+
+        Memberfunclist *newMethod = (Memberfunclist *)malloc(sizeof(Memberfunclist));
+        newMethod->Name = strdup(name);
+        newMethod->Type = type;
+        newMethod->Paramlist = Paramlist;
+        newMethod->Funcposition = cptr->Methodcount++;  // allocate new slot in VFT
+        newMethod->Flabel = FUNC_LABEL_COUNTER++;
+        newMethod->Next = NULL;
+
+        if (cptr->Vfuncptr == NULL)
+            cptr->Vfuncptr = newMethod;
+        else {
+            Memberfunclist *temp = cptr->Vfuncptr;
+            while (temp->Next != NULL) temp = temp->Next;
+            temp->Next = newMethod;
+        }
+
+        return;
+    }
+
+    /* ---------------- BRAND NEW METHOD ---------------- */
     if (cptr->Methodcount >= 8) {
-        printf("Class Error: Too many methods in class '%s'. (Limit: 8)\n", cptr->Name);
+        printf("Class Error: Too many methods in class '%s'. Limit = 8.\n", cptr->Name);
         exit(1);
     }
 
@@ -265,47 +377,83 @@ void Class_Minstall(Classtable *cptr, char *name, table_type *type, p_node *Para
     newMethod->Name = strdup(name);
     newMethod->Type = type;
     newMethod->Paramlist = Paramlist;
-    newMethod->Funcposition = cptr->Methodcount++;     // New VFT slot
-    newMethod->Flabel = FUNC_LABEL_COUNTER++;          // New function label
+    newMethod->Funcposition = cptr->Methodcount++;
+    newMethod->Flabel = FUNC_LABEL_COUNTER++;
     newMethod->Next = NULL;
 
     if (cptr->Vfuncptr == NULL)
         cptr->Vfuncptr = newMethod;
     else {
         Memberfunclist *temp = cptr->Vfuncptr;
-        while (temp->Next != NULL)
-            temp = temp->Next;
+        while (temp->Next != NULL) temp = temp->Next;
         temp->Next = newMethod;
     }
 }
 
 /* --------------------- DEBUG PRINT --------------------- */
+void PrintParamList(p_node* P) {
+    printf("(");
+    while (P != NULL) {
+
+        if (P->type != NULL)
+            printf("%s", P->type->name);   // print type name
+        else
+            printf("unknown");             // just for safety
+
+        if (P->next != NULL)
+            printf(", ");
+
+        P = P->next;
+    }
+    printf(")");
+}
 
 void PrintClassTable() {
     Classtable *C = ClassTable;
-    printf("\n========= CLASS TABLE =========\n");
+
+    printf("\n===================== CLASS TABLE =====================\n");
+
     while (C != NULL) {
-        printf("\nClass: %s | Index: %d\n", C->Name, C->Class_index);
-        printf("Fields (%d):\n", C->Fieldcount);
+
+        printf("\nClass Name   : %s\n", C->Name);
+        printf("Class Index  : %d\n", C->Class_index);
+        printf("Parent Class : %s\n", (C->Parentptr ? C->Parentptr->Name : "None"));
+
+        printf("\n-- Fields (%d) --\n", C->Fieldcount);
         Fieldlist *F = C->Memberfield;
         while (F != NULL) {
             if (F->Type)
-                printf("  #%d %s : type=%s\n", F->Fieldindex, F->Name, F->Type->name);
+                printf("  [%d] %s : type = %s\n", F->Fieldindex, F->Name, F->Type->name);
             else if (F->Ctype)
-                printf("  #%d %s : class=%s\n", F->Fieldindex, F->Name, F->Ctype->Name);
+                printf("  [%d] %s : class = %s\n", F->Fieldindex, F->Name, F->Ctype->Name);
+
             F = F->Next;
         }
 
-        printf("Methods (%d):\n", C->Methodcount);
+        printf("\n-- Methods (%d) --\n", C->Methodcount);
         Memberfunclist *M = C->Vfuncptr;
+
         while (M != NULL) {
-            printf("  #%d %s : returns=%s | Flabel=%d\n",
-                   M->Funcposition, M->Name,
-                   M->Type ? M->Type->name : "unknown", M->Flabel);
+
+            printf("  [%d] %s ", M->Funcposition, M->Name);
+
+            // Print parameter list
+            PrintParamList(M->Paramlist);
+
+            if (M->Type)
+                printf(" : returns %s", M->Type->name);
+            else
+                printf(" : returns <class>");
+
+            printf(" | Label = L%d\n", M->Flabel);
+
             M = M->Next;
         }
 
+        printf("\n--------------------------------------------------------\n");
+
         C = C->Next;
     }
-    printf("===============================\n");
+
+    printf("\n========================================================\n");
 }

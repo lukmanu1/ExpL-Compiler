@@ -19,7 +19,7 @@ void read_system_call(FILE *fptr, int addrReg);
 
 // ---------- Function Handling ----------
 int code_gen_main_function(FILE* fptr);
-void code_gen_function_definition(FILE *fptr, ast_node *funct, Classtable* current_class);
+void code_gen_function_definition(FILE *fptr, ast_node *funct, Classtable* current_class, p_node* paramList);
 int code_gen_return(FILE* fptr, ast_node* node);
 void code_gen_exit_function(FILE *fptr);
 int code_gen_function_call(FILE *fptr, ast_node *calle);

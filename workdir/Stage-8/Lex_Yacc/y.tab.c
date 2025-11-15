@@ -1961,7 +1961,7 @@ yyreduce:
                                                         { 
                                                             type_function = default_types->int_type;
                                                             lst_binding = -4; 
-                                                            code_gen_function_definition(outputFile, (yyvsp[-5].AST_node), current_class); 
+                                                            code_gen_function_definition(outputFile, (yyvsp[-5].AST_node), current_class, (yyvsp[-3].param_node)); 
                                                             add_param_list_to_lst((yyvsp[-3].param_node));
                                                             if(current_class) { insert_self(current_class);}
                                                             lst_binding = 1; 
@@ -1983,7 +1983,7 @@ yyreduce:
 
   case 56:
 #line 203 "parser.y"
-                                                        { type_function = default_types->str_type; lst_binding = -4; code_gen_function_definition(outputFile, (yyvsp[-5].AST_node), current_class); add_param_list_to_lst((yyvsp[-3].param_node)); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
+                                                        { type_function = default_types->str_type; lst_binding = -4; code_gen_function_definition(outputFile, (yyvsp[-5].AST_node), current_class, (yyvsp[-3].param_node)); add_param_list_to_lst((yyvsp[-3].param_node)); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
 #line 1988 "y.tab.c"
     break;
 
@@ -1995,7 +1995,7 @@ yyreduce:
 
   case 58:
 #line 206 "parser.y"
-                                                         { type_function = tLookup((yyvsp[-6].AST_node)->name); lst_binding = -4; code_gen_function_definition(outputFile, (yyvsp[-5].AST_node), current_class); add_param_list_to_lst((yyvsp[-3].param_node)); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
+                                                         { type_function = tLookup((yyvsp[-6].AST_node)->name); lst_binding = -4; code_gen_function_definition(outputFile, (yyvsp[-5].AST_node), current_class, (yyvsp[-3].param_node)); add_param_list_to_lst((yyvsp[-3].param_node)); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
 #line 2000 "y.tab.c"
     break;
 

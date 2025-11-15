@@ -81,7 +81,7 @@ void compare_function_arguments(p_node* list1, ast_node* list2){
 ast_node* create_function_definition_node(table_type* type, ast_node* id, p_node* param_list, ast_node* body, Classtable* current_class){
 
     if(current_class){
-        Memberfunclist* function = Class_Mlookup(current_class, id->name);
+        Memberfunclist* function = Class_Mlookup(current_class, id->name, param_list);
         if(!function){
             printf("Function : %s ", id->name);
             yyerror("| Is undeclared.\n");
@@ -91,7 +91,7 @@ ast_node* create_function_definition_node(table_type* type, ast_node* id, p_node
             yyerror("Error: Method Data Type Mismatch.\n"); 
         }
 
-        compare_param_list(function->Paramlist, param_list);
+        // compare_param_list(function->Paramlist, param_list);
 
         id->type = function->Type;
         id->nodetype = NODE_TYPE_FUNCT_DEFINITION;
@@ -265,35 +265,84 @@ Memberfunclist* compare_methods(Memberfunclist* method_list, char* method_name){
     return NULL;
 }
 
-ast_node* create_class_function_call_node(ast_node* class, ast_node* method, ast_node* arg_list){
+int CompareParamLists_Args(p_node* params, ast_node* args) {
 
-    
-    if(class->Ctype == NULL){
-        printf("hey\n");
-        printf("Object Name : %s", class->name);
-        yyerror("Calling Methods for undefined Class.\n");
+    while (params && args) {
+
+        // Check if argument is class type — INVALID because function parameters can't use Ctype
+        if (args->Ctype != NULL) {
+            yyerror("Invalid argument: class objects cannot be passed as function parameters.");
+        }
+
+        // Compare primitive or user-defined type
+        if (params->type != args->type) {
+            return 0;   // type mismatch
+        }
+
+        params = params->next;
+        args = args->arglist;
     }
 
-    Memberfunclist* temp = compare_methods(class->Ctype->Vfuncptr, method->name);
+    // Length mismatch check
+    if (params != NULL || args != NULL) return 0;
 
-    if(temp == NULL){
-        printf("Function Name : %s ", method->name);
-        yyerror("Undefined Method Call.\n");
+    return 1; // All match
+}
+
+Memberfunclist* Class_MlookupCall(Classtable* Cptr, char* name, ast_node* Arglist) {
+
+    Memberfunclist* mth = Cptr->Vfuncptr;
+    Memberfunclist* match = NULL;
+
+    while (mth != NULL) {
+        if (strcmp(mth->Name, name) == 0) {
+
+            if (CompareParamLists_Args(mth->Paramlist, Arglist)) {
+                if (match != NULL) {
+                    yyerror("Ambiguous method call: multiple overloads match.");
+                }
+                match = mth;
+            }
+        }
+        mth = mth->Next;
     }
 
-    compare_function_arguments(temp->Paramlist, arg_list);
+    return match;
+}
 
+ast_node* create_class_function_call_node(ast_node* class, ast_node* method, ast_node* arg_list) {
+
+    // Ensure call is being made on a class object
+    if (class->Ctype == NULL) {
+        printf("Object Name : %s\n", class->name);
+        yyerror("Method call attempted on non-class variable.\n");
+    }
+
+    // Find the correct overloaded/overridden method
+    Memberfunclist* resolvedMethod = Class_MlookupCall(class->Ctype, method->name, arg_list);
+
+    if (resolvedMethod == NULL) {
+        printf("Method Name : %s\n", method->name);
+        yyerror("No matching overloaded method found for call.\n");
+    }
+
+    // Validate argument list against resolved method signature
+    if (!CompareParamLists_Args(resolvedMethod->Paramlist, arg_list)) {
+        yyerror("Argument mismatch in method call.\n");
+    }
+
+    // Store resolved method info in AST nodes for codegen
     method->arglist = arg_list;
 
+    // Create the function call AST node
     union Constant val;
     ast_node* function_call_node = create_ast_node(NODE_TYPE_CLASS_FUNCTION_CALL, NULL, val);
 
-    function_call_node->type = temp->Type;
-    function_call_node->ptr1 = class;
-    function_call_node->ptr2 = method;
-    
-    return function_call_node;
+    function_call_node->type = resolvedMethod->Type;       // return type
+    function_call_node->ptr1 = class;                      // object variable
+    function_call_node->ptr2 = method;                     // method & args
 
+    return function_call_node;
 }
 
 ast_node* create_function_call_node(ast_node* function, ast_node* arg_list){

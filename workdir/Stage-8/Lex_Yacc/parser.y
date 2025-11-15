@@ -186,7 +186,7 @@ Fdef :
     INT ID '(' ParamList ')' '{' LdeclBlock             { 
                                                             type_function = default_types->int_type;
                                                             lst_binding = -4; 
-                                                            code_gen_function_definition(outputFile, $2, current_class); 
+                                                            code_gen_function_definition(outputFile, $2, current_class, $4); 
                                                             add_param_list_to_lst($4);
                                                             if(current_class) { insert_self(current_class);}
                                                             lst_binding = 1; 
@@ -200,10 +200,10 @@ Fdef :
                                                             code_gen_exit_function(outputFile); 
                                                         }
 
-  | STR ID '(' ParamList ')' '{' LdeclBlock             { type_function = default_types->str_type; lst_binding = -4; code_gen_function_definition(outputFile, $2, current_class); add_param_list_to_lst($4); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
+  | STR ID '(' ParamList ')' '{' LdeclBlock             { type_function = default_types->str_type; lst_binding = -4; code_gen_function_definition(outputFile, $2, current_class, $4); add_param_list_to_lst($4); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
     Body '}'                                            { $$ = create_function_definition_node(default_types->str_type, $2, $4, $9, current_class); lst_head = lst_tail = NULL; codeGen(outputFile, $9); code_gen_exit_function(outputFile); }
 
-  | ID ID '(' ParamList ')'  '{' LdeclBlock              { type_function = tLookup($1->name); lst_binding = -4; code_gen_function_definition(outputFile, $2, current_class); add_param_list_to_lst($4); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
+  | ID ID '(' ParamList ')'  '{' LdeclBlock              { type_function = tLookup($1->name); lst_binding = -4; code_gen_function_definition(outputFile, $2, current_class, $4); add_param_list_to_lst($4); if(current_class) { insert_self(current_class);} lst_binding = 1; lst_display(); }
    Body '}'                                              { $$ = create_function_definition_node(type_function, $2, $4, $9, current_class); lst_head = lst_tail = NULL; codeGen(outputFile, $9); code_gen_exit_function(outputFile); }
 ;
 

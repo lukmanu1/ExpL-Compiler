@@ -176,10 +176,10 @@ int code_gen_system_calls(FILE* fptr, ast_node* node){
     return ret;
 }
 
-void code_gen_function_definition(FILE *fptr, ast_node *funct, Classtable* current_class)
+void code_gen_function_definition(FILE *fptr, ast_node *funct, Classtable* current_class, p_node* paramList)
 {
     if(current_class){
-        Memberfunclist* function = Class_Mlookup(current_class, funct->name);
+        Memberfunclist* function = Class_Mlookup(current_class, funct->name, paramList);
         if(!function) yyerror("Undeclared Method.\n");
         
         fprintf(fptr, "%s%d:\n", funct->name, function->Flabel);
@@ -332,8 +332,9 @@ int code_gen_class_function_call(FILE* fptr, ast_node* calle){
     
     fprintf(fptr, "PUSH R0\n");
 
-    Memberfunclist* field_list = find_class_function_index(calle->ptr1->Ctype->Vfuncptr, calle->ptr2->name);
-
+    // Memberfunclist* field_list = find_class_function_index(calle->ptr1->Ctype->Vfuncptr, calle->ptr2->name);
+    Memberfunclist* field_list = Class_MlookupCall(calle->ptr1->Ctype, calle->ptr2->name, calle->ptr2->arglist);
+    
     int obj_addr = resolve_address(fptr, calle->ptr1);
     fprintf(fptr, "ADD R%d, 1\n", obj_addr);
     fprintf(fptr, "MOV R%d, [R%d]\n", obj_addr, obj_addr);

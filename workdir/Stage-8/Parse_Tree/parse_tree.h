@@ -78,4 +78,7 @@ int isSubclass(Classtable *child, Classtable *parent);
 
 ast_node* create_self_node( Classtable* current_class);
 
+int CompareParamLists_Args(p_node* params, ast_node* args);
+Memberfunclist* Class_MlookupCall(Classtable* Cptr, char* name, ast_node* Arglist);
+
 #endif

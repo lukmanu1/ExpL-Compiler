@@ -57,9 +57,13 @@ Fieldlist *Class_Flookup(Classtable *Ctype, char *Name);
 
 // Method operations
 void Class_Minstall(Classtable *cptr, char *name, table_type *type, p_node *Paramlist);
-Memberfunclist *Class_Mlookup(Classtable *Ctype, char *Name);
+Memberfunclist *Class_Mlookup(Classtable *Ctype, char *Name, p_node* Paramlist);
 
 // Debug helper
+void PrintParamList(p_node* P);
 void PrintClassTable();
+
+// Newly added functions
+int CompareParamLists(p_node *p1, p_node *p2);
 
 #endif
